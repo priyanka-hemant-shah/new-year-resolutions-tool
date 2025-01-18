@@ -7,7 +7,9 @@ function Modal({ title, children, onClose }) {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-content">
-          {children}
+          <ul className="modal-list">
+            {children}
+          </ul>
         </div>
       </div>
     </div>

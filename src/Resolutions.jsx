@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ResolutionCard from './ResolutionCard';
 import Modal from './Modal';
+import Confetti from 'react-confetti';
 
 function Resolutions() {
   const [resolutions, setResolutions] = useState([]);
@@ -10,6 +11,8 @@ function Resolutions() {
   const [savedLists, setSavedLists] = useState([]);
   const [selectedList, setSelectedList] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [checkedItems, setCheckedItems] = useState({});
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const savedResolutions = localStorage.getItem('resolutions');
@@ -48,7 +51,8 @@ function Resolutions() {
       const newList = {
         id: Date.now(),
         title: `Resolutions List ${savedLists.length + 1}`,
-        resolutions: [...resolutions]
+        resolutions: [...resolutions],
+        allChecked: false
       };
       
       const updatedLists = [...savedLists, newList];
@@ -64,6 +68,12 @@ function Resolutions() {
   const handleOpenList = (list) => {
     setSelectedList(list);
     setIsModalOpen(true);
+    const savedCheckedItems = localStorage.getItem(`checkedItems-${list.id}`);
+    if (savedCheckedItems) {
+      setCheckedItems(JSON.parse(savedCheckedItems));
+    } else {
+      setCheckedItems({});
+    }
   };
 
   const handleRename = (id, newTitle) => {
@@ -72,6 +82,31 @@ function Resolutions() {
     );
     setSavedLists(updatedLists);
     localStorage.setItem('savedLists', JSON.stringify(updatedLists));
+  };
+
+  const handleCheckboxChange = (index) => {
+    setCheckedItems(prev => {
+      const updatedCheckedItems = {
+        ...prev,
+        [index]: !prev[index]
+      };
+      localStorage.setItem(`checkedItems-${selectedList.id}`, JSON.stringify(updatedCheckedItems));
+      
+      const allChecked = Object.values(updatedCheckedItems).every(item => item);
+      if (allChecked) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
+      
+      // Update the medal badge on the resolution card
+      const updatedLists = savedLists.map(list => 
+        list.id === selectedList.id ? { ...list, allChecked } : list
+      );
+      setSavedLists(updatedLists);
+      localStorage.setItem('savedLists', JSON.stringify(updatedLists));
+      
+      return updatedCheckedItems;
+    });
   };
 
   return (
@@ -132,6 +167,7 @@ function Resolutions() {
             list={list}
             onClick={() => handleOpenList(list)}
             onRename={handleRename}
+            allChecked={list.allChecked}
           />
         ))}
       </div>
@@ -141,11 +177,22 @@ function Resolutions() {
           title={selectedList?.title}
           onClose={() => setIsModalOpen(false)}
         >
-          <ul>
-            {selectedList?.resolutions.map((resolution, index) => (
-              <li key={index}>{resolution}</li>
-            ))}
-          </ul>
+          {showConfetti && <Confetti />}
+          {selectedList?.resolutions.map((resolution, index) => (
+            <li key={index} className="modal-list-item">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={checkedItems[index] || false}
+                  onChange={() => handleCheckboxChange(index)}
+                />
+                <span className="checkbox-custom"></span>
+                <span className={`resolution-text ${checkedItems[index] ? 'checked' : ''}`}>
+                  {resolution}
+                </span>
+              </label>
+            </li>
+          ))}
         </Modal>
       )}
     </>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function ResolutionCard({ list, onClick, onRename }) {
+function ResolutionCard({ list, onClick, onRename, allChecked }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(list.title);
 
@@ -15,6 +15,7 @@ function ResolutionCard({ list, onClick, onRename }) {
   return (
     <div className="resolution-card" onClick={onClick}>
       <div className="card-content">
+        {allChecked && <div className="medal-badge"><i className="fas fa-medal"></i></div>}
         <div className="card-header">
           {isRenaming ? (
             <input
@@ -35,12 +36,13 @@ function ResolutionCard({ list, onClick, onRename }) {
             <i className={`fas ${isRenaming ? 'fa-check' : 'fa-edit'}`}></i>
           </button>
         </div>
-        <p className="resolution-count">{list.resolutions.length} resolutions</p>
         <div className="card-preview">
-          {list.resolutions.slice(0, 2).map((resolution, index) => (
-            <p key={index} className="preview-item">{resolution}</p>
-          ))}
-          {list.resolutions.length > 2 && <p className="preview-more">...</p>}
+          {list.resolutions[0] && (
+            <p className="preview-item">{list.resolutions[0]}</p>
+          )}
+          {list.resolutions.length > 1 && (
+            <p className="preview-more">+{list.resolutions.length - 1} more</p>
+          )}
         </div>
       </div>
     </div>
